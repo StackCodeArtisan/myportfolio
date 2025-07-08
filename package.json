@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "aos": "^2.3.4",
+    "react-responsive-carousel": "^3.2.23"
+  }
+}
