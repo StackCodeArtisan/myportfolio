@@ -1,0 +1,97 @@
+@import '@fontsource-variable/newsreader/opsz.css';
+@import '@fontsource-variable/instrument-sans/wdth.css';
+
+@view-transition { navigation: auto; }
+
+:root {
+  --bg: #121417;
+  --panel: #1a1d22;
+  --panel-2: #20242a;
+  --line: #2a2f37;
+  --line-strong: #3a414c;
+  --text: #e8eaef;
+  --muted: #a3abb8;
+  --faint: #7d8696;
+  --accent: #5b8cff;
+  --accent-ink: #8fb0ff;
+  --violet: #8b7cf6;
+
+  --serif: 'Newsreader Variable', 'Iowan Old Style', Georgia, serif;
+  --sans: 'Instrument Sans Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --step--1: 0.875rem;
+  --step-0: 1.0625rem;
+  --step-1: 1.25rem;
+  --step-2: 1.5625rem;
+  --step-3: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem);
+  --step-4: clamp(2.4rem, 1.6rem + 3.4vw, 4.25rem);
+
+  --wrap: 72rem;
+  --gutter: clamp(1.25rem, 4vw, 2.5rem);
+  --section: clamp(4.5rem, 10vw, 8rem);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: var(--step-0);
+  line-height: 1.6;
+  font-variation-settings: 'wdth' 100;
+  -webkit-font-smoothing: antialiased;
+}
+img, svg { display: block; max-width: 100%; }
+a { color: inherit; }
+p { margin: 0 0 1em; }
+h1, h2, h3 { font-family: var(--serif); font-weight: 400; line-height: 1.1; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+h2 { font-size: var(--step-3); }
+h3 { font-size: var(--step-1); font-family: var(--sans); font-weight: 600; letter-spacing: 0; line-height: 1.3; }
+ul { margin: 0; padding: 0; list-style: none; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+::selection { background: color-mix(in srgb, var(--accent) 40%, transparent); }
+
+.wrap { width: min(100% - 2 * var(--gutter), var(--wrap)); margin-inline: auto; }
+.section { padding-block: var(--section); border-top: 1px solid var(--line); }
+.section-head { display: grid; gap: 1rem; align-content: start; margin-bottom: clamp(2.5rem, 5vw, 4rem); max-width: 44rem; }
+.lede { color: var(--muted); font-size: var(--step-1); line-height: 1.55; max-width: 38em; margin: 0; }
+.muted { color: var(--muted); }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.skip-link { position: absolute; left: 1rem; top: -4rem; z-index: 100; background: var(--accent); color: #0d1320; padding: 0.6rem 1rem; font-weight: 600; text-decoration: none; }
+.skip-link:focus { top: 1rem; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 0.55rem;
+  padding: 0.8rem 1.3rem; border-radius: 6px;
+  font: 600 var(--step--1)/1 var(--sans); text-decoration: none;
+  border: 1px solid var(--line-strong); color: var(--text); background: transparent;
+  transition: background-color .2s, border-color .2s, color .2s;
+  cursor: pointer;
+}
+.btn:hover { border-color: var(--muted); background: var(--panel); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #0b1222; }
+.btn-primary:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
+.btn svg { width: 1.05em; height: 1.05em; }
+
+.text-link { color: var(--accent-ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+.text-link:hover { color: var(--text); }
+
+.tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.tags li { font-size: 0.8125rem; color: var(--muted); border: 1px solid var(--line); padding: 0.25rem 0.6rem; border-radius: 4px; }
+
+.status { display: inline-flex; align-items: center; gap: 0.5rem; font-size: var(--step--1); color: var(--muted); }
+.status::before { content: ''; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--faint); }
+.status[data-state='live']::before { background: #4ade80; }
+.status[data-state='progress']::before { background: var(--accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  @view-transition { navigation: none; }
+}

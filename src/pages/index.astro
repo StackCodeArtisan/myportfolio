@@ -1,0 +1,306 @@
+---
+import Base from '../layouts/Base.astro';
+import HeroDiagram from '../components/HeroDiagram.astro';
+import ContactForm from '../components/ContactForm.astro';
+import Brand from '../components/Brand.astro';
+import { Mail, MapPin, ArrowUpRight, Lock } from '@lucide/astro';
+import { person } from '../data/site.js';
+import { projects, earlierWork } from '../data/projects.js';
+import { expertise, learning, tools, experience, education, process } from '../data/profile.js';
+
+const [vendora, learn, ...smaller] = projects;
+const statusState = (s: string) => (s === 'Live' ? 'live' : s.startsWith('In') ? 'progress' : 'idle');
+
+const jsonLd = [{
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: person.name,
+  jobTitle: person.role,
+  email: `mailto:${person.email}`,
+  url: Astro.site?.href,
+  address: { '@type': 'PostalAddress', addressLocality: 'Lagos', addressCountry: 'NG' },
+  worksFor: { '@type': 'Organization', name: person.company, description: person.companyDescription },
+  alumniOf: { '@type': 'CollegeOrUniversity', name: 'Caleb University' },
+  knowsAbout: ['Full-stack web development', 'Python', 'FastAPI', 'Vue.js', 'React', 'PostgreSQL', 'SaaS architecture'],
+  sameAs: [person.github, person.linkedin],
+}];
+---
+<Base jsonLd={jsonLd}>
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="who">{person.name}</p>
+        <h1>Engineering digital products that solve real problems.</h1>
+        <p class="lede">I’m a full-stack software engineer and the founder of Tesselix LTD. I design and build web applications, SaaS platforms and technology solutions that help businesses work more efficiently and grow.</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="#projects">Explore my work</a>
+          <a class="btn" href="#contact">Let’s connect</a>
+        </div>
+        <dl class="facts">
+          <div><dt>Based in</dt><dd>Lagos, Nigeria</dd></div>
+          <div><dt>Building</dt><dd>VendoraCRM and Tesselix Learn</dd></div>
+          <div><dt>Works with</dt><dd>Python, FastAPI, Vue.js, PostgreSQL</dd></div>
+        </dl>
+      </div>
+      <HeroDiagram />
+    </div>
+  </section>
+
+  <section class="section" id="about" aria-labelledby="about-title">
+    <div class="wrap about-grid">
+      <div class="section-head">
+        <h2 id="about-title">From telling stories to building systems</h2>
+      </div>
+      <div class="prose">
+        <p>I studied Mass Communication at Caleb University and began my career in media, sales and banking. I monitored coverage at the International Press Centre, wrote for the Diamond Awards for Media Excellence and served customers at United Bank for Africa, where a CRM system sat behind every interaction.</p>
+        <p>That work showed me how much a service depends on the software behind it. In 2024 I completed a full-stack web development programme at Moat Academy and started building web applications for clients as a freelance developer.</p>
+        <p>Since then my work has grown from single applications into complete products. VendoraCRM, a business-management platform for small businesses, is live. Tesselix Learn, a multi-tenant learning platform, is in development, with its architecture documented decision by decision. In October 2026 I registered Tesselix LTD to build software products and deliver technology solutions for clients.</p>
+        <p>I take a product from problem to production: understanding who it is for, designing the architecture, building the frontend and backend, then testing and deploying it. My communications background shows up in clear documentation and in explaining technical decisions to people who are not engineers.</p>
+      </div>
+      <dl class="about-facts">
+        <div><dt>Role</dt><dd>Founder & CEO, Tesselix LTD</dd></div>
+        <div><dt>Company</dt><dd>{person.companyDescription}</dd></div>
+        <div><dt>Building software since</dt><dd>January 2024</dd></div>
+        <div><dt>Education</dt><dd>B.Sc. Mass Communication, Caleb University; Full-Stack Web Development, Moat Academy</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="section" id="expertise" aria-labelledby="expertise-title">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="expertise-title">Technical expertise</h2>
+        <p class="lede">Technologies and practices I have used in real projects. What I’m still learning is listed separately.</p>
+      </div>
+      <div class="skill-grid">
+        {expertise.map((group) => (
+          <div class="skill-group">
+            <h3>{group.title}</h3>
+            <ul class="tags">{group.items.map((i) => <li>{i}</li>)}</ul>
+          </div>
+        ))}
+      </div>
+      <div class="skill-foot">
+        <p><strong>Currently learning:</strong> {learning.join(', ')}</p>
+        <p><strong>Everyday tools:</strong> {tools.join(', ')}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="projects" aria-labelledby="projects-title">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="projects-title">Products and projects</h2>
+        <p class="lede">Software I have designed and built, with an honest status for each.</p>
+      </div>
+
+      {[vendora, learn].map((p) => (
+        <article class="feature">
+          <div class="feature-main">
+            <p class="status" data-state={statusState(p.status)}>{p.status}. {p.statusDetail}</p>
+            <h3 class="feature-title">{p.name}</h3>
+            <p class="feature-tag">{p.tagline}</p>
+            <p class="muted">{p.summary}</p>
+            <p class="role"><strong>Role:</strong> {p.role}</p>
+            <ul class="tags">{p.stack.slice(0, 8).map((s) => <li>{s}</li>)}</ul>
+            <div class="feature-links">
+              <a class="btn" href={`/projects/${p.slug}`}>Read the case study</a>
+              {p.link && <a class="text-link ext" href={p.link.href} target="_blank" rel="noopener">{p.link.label}<ArrowUpRight size={16} aria-hidden="true" /></a>}
+              {p.privateNote && <span class="private"><Lock size={15} aria-hidden="true" />Private repository</span>}
+            </div>
+          </div>
+          <dl class="feature-caps">
+            {(p.milestone ? p.decisions.slice(0, 2) : p.capabilities.slice(0, 6)).map(([k, v]) => <div><dt>{k}</dt><dd>{v}</dd></div>)}
+            {p.milestone && <div class="milestone"><dt>{p.milestone.title}</dt><dd>{p.milestone.body}</dd></div>}
+          </dl>
+        </article>
+      ))}
+
+      <div class="pair">
+        {smaller.map((p) => (
+          <article class="card">
+            <p class="status" data-state={statusState(p.status)}>{p.status}</p>
+            <h3 class="card-title">{p.name}</h3>
+            <p class="muted">{p.summary}</p>
+            <ul class="tags">{p.stack.slice(0, 5).map((s) => <li>{s}</li>)}</ul>
+            <a class="text-link" href={`/projects/${p.slug}`}>Read the case study<span class="visually-hidden">: {p.name}</span></a>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="experience" aria-labelledby="experience-title">
+    <div class="wrap exp-grid">
+      <div class="section-head">
+        <h2 id="experience-title">Experience</h2>
+        <p class="lede">Software engineering now, built on earlier work with customers, media and sales.</p>
+      </div>
+      <ol class="timeline">
+        {experience.map((e) => (
+          <li>
+            <p class="period">{e.period}</p>
+            <div>
+              <h3>{e.title}</h3>
+              <p class="org">{e.org}</p>
+              {e.body && <p class="muted">{e.body}</p>}
+            </div>
+          </li>
+        ))}
+      </ol>
+      <div class="edu">
+        <h3>Education and certification</h3>
+        <ul>{education.map((e) => <li><span>{e.title}</span><span class="muted">{e.org}, {e.year}</span></li>)}</ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="approach" aria-labelledby="approach-title">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="approach-title">How I work</h2>
+        <p class="lede">The principles I follow on every project, from a client website to a multi-tenant platform.</p>
+      </div>
+      <ol class="process">
+        {process.map(([title, body], i) => (
+          <li><span class="step" aria-hidden="true">{i + 1}</span><h3>{title}</h3><p class="muted">{body}</p></li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section" id="github" aria-labelledby="github-title">
+    <div class="wrap gh-grid">
+      <div class="section-head">
+        <h2 id="github-title">On GitHub</h2>
+        <p class="lede">My current product and client code lives in private repositories. These public repositories show my earlier work.</p>
+        <p><a class="btn" href={person.github} target="_blank" rel="noopener"><Brand name="github" size={16} />github.com/{person.githubHandle}</a></p>
+      </div>
+      <ul class="repos">
+        {earlierWork.map((r) => (
+          <li>
+            <a href={r.href} target="_blank" rel="noopener">
+              <span class="repo-name">{r.name}<ArrowUpRight size={16} aria-hidden="true" /></span>
+              <span class="muted">{r.body}</span>
+              <span class="repo-stack">{r.stack}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section contact" id="contact" aria-labelledby="contact-title">
+    <div class="wrap contact-grid">
+      <div>
+        <h2 id="contact-title">Let’s build something useful</h2>
+        <p class="lede">I’m open to software engineering roles, client projects and conversations about Tesselix LTD. The fastest way to reach me is email.</p>
+        <ul class="channels">
+          <li><Mail size={18} aria-hidden="true" /><a href={`mailto:${person.email}`}>{person.email}</a></li>
+          <li><Brand name="linkedin" size={18} /><a href={person.linkedin} target="_blank" rel="noopener">LinkedIn</a></li>
+          <li><Brand name="github" size={18} /><a href={person.github} target="_blank" rel="noopener">GitHub</a></li>
+          <li><MapPin size={18} aria-hidden="true" /><span>{person.location}</span></li>
+        </ul>
+      </div>
+      <ContactForm />
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero { padding-block: clamp(3rem, 8vw, 6.5rem) clamp(4rem, 9vw, 7rem); }
+  .hero-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: clamp(2rem, 5vw, 4.5rem); align-items: center; }
+  .who { color: var(--accent-ink); font-weight: 500; margin-bottom: 1.25rem; }
+  h1 { font-size: var(--step-4); font-variation-settings: 'opsz' 72; margin-bottom: 1.5rem; }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 2rem 0 2.75rem; }
+  .facts { display: grid; grid-template-columns: repeat(3, auto); gap: 1.5rem; margin: 0; padding-top: 1.5rem; border-top: 1px solid var(--line); }
+  dt { color: var(--faint); font-size: var(--step--1); }
+  dd { margin: 0.15rem 0 0; font-size: 0.95rem; }
+
+  .about-grid { display: grid; grid-template-columns: 1fr 1.6fr; gap: 1.5rem 4rem; }
+  .about-grid .section-head { grid-row: span 2; align-self: start; }
+  .prose p { color: var(--muted); max-width: 38em; }
+  .prose p:first-child { color: var(--text); font-size: var(--step-1); line-height: 1.5; }
+  .about-facts { grid-column: 2; display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem 2rem; margin: 1rem 0 0; padding-top: 1.5rem; border-top: 1px solid var(--line); }
+
+  .skill-grid { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+  .skill-group { padding: 1.75rem; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .skill-group h3 { margin-bottom: 1rem; }
+  .skill-foot { display: flex; flex-wrap: wrap; gap: 0.5rem 3rem; margin-top: 1.5rem; color: var(--muted); font-size: 0.95rem; }
+  .skill-foot strong { color: var(--text); font-weight: 600; }
+
+  .feature { display: grid; grid-template-columns: 1.15fr 1fr; gap: 2rem 4rem; padding-block: 3rem; border-top: 1px solid var(--line); }
+  .feature:first-of-type { border-top: 0; padding-top: 0; }
+  .feature-title { font-family: var(--serif); font-weight: 400; font-size: var(--step-3); margin: 0.75rem 0 0.4rem; }
+  .feature-tag { font-size: var(--step-1); line-height: 1.4; margin-bottom: 1rem; }
+  .role { font-size: 0.95rem; color: var(--muted); }
+  .role strong { color: var(--text); font-weight: 600; }
+  .feature-links { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 1.5rem; margin-top: 1.75rem; }
+  .ext { display: inline-flex; align-items: center; gap: 0.3rem; }
+  .private { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--faint); font-size: var(--step--1); }
+  .feature-caps { margin: 0; align-self: start; display: grid; align-content: start; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+  .feature-caps > div { padding: 1rem 1.25rem; border-bottom: 1px solid var(--line); }
+  .feature-caps > div:last-child { border-bottom: 0; }
+  .feature-caps dt { color: var(--text); font-weight: 600; font-size: 0.95rem; }
+  .feature-caps dd { color: var(--muted); font-size: 0.925rem; }
+  .milestone { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .milestone dt { color: var(--accent-ink) !important; }
+
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem; }
+  .card { border: 1px solid var(--line); border-radius: 6px; padding: 1.75rem; display: grid; gap: 0.85rem; align-content: start; transition: border-color .2s; }
+  .card:hover { border-color: var(--line-strong); }
+  .card p { margin: 0; }
+  .card-title { font-family: var(--serif); font-weight: 400; font-size: var(--step-2); }
+
+  .exp-grid { display: grid; grid-template-columns: 1fr 1.8fr; gap: 2rem 4rem; }
+  .exp-grid .section-head { grid-row: span 2; align-self: start; position: sticky; top: 6rem; }
+  .timeline { margin: 0; padding: 0; list-style: none; }
+  .timeline li { display: grid; grid-template-columns: 9.5rem 1fr; gap: 1.5rem; padding-block: 1.4rem; border-top: 1px solid var(--line); }
+  .timeline li:first-child { border-top: 0; padding-top: 0; }
+  .period { color: var(--faint); font-size: var(--step--1); margin: 0.15rem 0 0; font-variant-numeric: tabular-nums; }
+  .org { color: var(--accent-ink); margin: 0.15rem 0 0.4rem; font-size: 0.95rem; }
+  .timeline .muted { margin: 0; font-size: 0.95rem; }
+  .edu { grid-column: 2; padding-top: 1.75rem; border-top: 1px solid var(--line-strong); }
+  .edu h3 { margin-bottom: 1rem; }
+  .edu li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.25rem 1rem; padding-block: 0.5rem; font-size: 0.95rem; }
+
+  .process { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+  .process li { padding: 1.5rem 1.25rem 0 0; }
+  .process li + li { padding-left: 1.25rem; border-left: 1px solid var(--line); }
+  .step { display: block; font-family: var(--serif); font-size: 2.25rem; color: var(--accent); line-height: 1; margin-bottom: 1rem; }
+  .process h3 { margin-bottom: 0.6rem; font-size: 1.05rem; }
+  .process p { font-size: 0.925rem; }
+
+  .gh-grid { display: grid; grid-template-columns: 1fr 1.6fr; gap: 2rem 4rem; }
+  .gh-grid .btn { margin-top: 0.5rem; }
+  .repos { display: grid; border-top: 1px solid var(--line); }
+  .repos a { display: grid; gap: 0.35rem; padding: 1.4rem 0; border-bottom: 1px solid var(--line); text-decoration: none; }
+  .repo-name { display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600; font-size: var(--step-1); }
+  .repos a:hover .repo-name { color: var(--accent-ink); }
+  .repo-stack { color: var(--faint); font-size: var(--step--1); }
+
+  .contact-grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: 3rem 5rem; }
+  .contact h2 { font-size: var(--step-4); margin-bottom: 1.5rem; }
+  .channels { display: grid; gap: 0.9rem; margin-top: 2.25rem; }
+  .channels li { display: flex; align-items: center; gap: 0.75rem; color: var(--muted); }
+  .channels a { color: var(--text); text-decoration-color: var(--line-strong); text-underline-offset: 0.2em; }
+  .channels a:hover { text-decoration-color: var(--accent); }
+
+  @media (max-width: 1100px) {
+    .process { grid-template-columns: repeat(2, 1fr); border-top: 0; gap: 0 2rem; }
+    .process li, .process li + li { padding: 1.5rem 0; border-left: 0; border-top: 1px solid var(--line); }
+  }
+  @media (max-width: 960px) {
+    .hero-grid, .about-grid, .exp-grid, .gh-grid, .contact-grid, .feature { grid-template-columns: 1fr; }
+    .about-grid .section-head, .exp-grid .section-head { grid-row: auto; position: static; }
+    .about-facts, .edu { grid-column: auto; }
+    .skill-grid { grid-template-columns: 1fr 1fr; }
+    .pair { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .facts { grid-template-columns: 1fr 1fr; }
+    .about-facts { grid-template-columns: 1fr; }
+    .skill-grid, .process { grid-template-columns: 1fr; }
+    .timeline li { grid-template-columns: 1fr; gap: 0.35rem; }
+  }
+</style>

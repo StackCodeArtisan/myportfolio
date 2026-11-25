@@ -1,0 +1,94 @@
+---
+import { person } from '../data/site.js';
+---
+<form class="contact-form" id="contact-form" novalidate data-email={person.email}>
+  <div class="field">
+    <label for="cf-name">Your name</label>
+    <input id="cf-name" name="name" type="text" autocomplete="name" required aria-describedby="cf-name-err" />
+    <p class="err" id="cf-name-err" hidden>Enter your name.</p>
+  </div>
+  <div class="field">
+    <label for="cf-email">Your email</label>
+    <input id="cf-email" name="email" type="email" autocomplete="email" required aria-describedby="cf-email-err" />
+    <p class="err" id="cf-email-err" hidden>Enter an email address like name@example.com.</p>
+  </div>
+  <div class="field">
+    <label for="cf-topic">What is it about?</label>
+    <select id="cf-topic" name="topic">
+      <option>A software engineering role</option>
+      <option>A client project</option>
+      <option>Tesselix LTD</option>
+      <option>Something else</option>
+    </select>
+  </div>
+  <div class="field">
+    <label for="cf-message">Message</label>
+    <textarea id="cf-message" name="message" rows="5" required aria-describedby="cf-message-err"></textarea>
+    <p class="err" id="cf-message-err" hidden>Write a short message.</p>
+  </div>
+  <p class="note">This form opens your email app with your message ready to send. Nothing is sent until you press send there.</p>
+  <div class="row">
+    <button class="btn btn-primary" type="submit">Open in my email app</button>
+    <button class="btn" type="button" id="copy-email">Copy email address</button>
+  </div>
+  <p class="result" role="status" aria-live="polite"></p>
+</form>
+
+<style>
+  .contact-form { display: grid; gap: 1.1rem; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: clamp(1.25rem, 3vw, 2rem); }
+  .field { display: grid; gap: 0.4rem; }
+  label { font-size: var(--step--1); font-weight: 600; }
+  input, textarea, select {
+    width: 100%; font: inherit; font-size: 1rem; color: var(--text); background: var(--bg);
+    border: 1px solid var(--line-strong); border-radius: 4px; padding: 0.7rem 0.8rem;
+  }
+  textarea { resize: vertical; min-height: 8rem; }
+  input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  [aria-invalid='true'] { border-color: #f87171; }
+  .err { margin: 0; color: #fca5a5; font-size: var(--step--1); }
+  .note { margin: 0; color: var(--faint); font-size: var(--step--1); }
+  .row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+  .result { margin: 0; font-size: var(--step--1); color: var(--accent-ink); min-height: 1.2em; }
+</style>
+
+<script>
+  const form = document.getElementById('contact-form') as HTMLFormElement | null;
+  const result = form?.querySelector<HTMLElement>('.result');
+  const email = form?.dataset.email || '';
+
+  function setError(input: HTMLInputElement | HTMLTextAreaElement, show: boolean) {
+    input.setAttribute('aria-invalid', show ? 'true' : 'false');
+    const err = document.getElementById(`${input.id}-err`);
+    if (err) err.hidden = !show;
+  }
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = form.querySelector('#cf-name') as HTMLInputElement;
+    const from = form.querySelector('#cf-email') as HTMLInputElement;
+    const message = form.querySelector('#cf-message') as HTMLTextAreaElement;
+    const topic = form.querySelector('#cf-topic') as HTMLSelectElement;
+    const checks: [HTMLInputElement | HTMLTextAreaElement, boolean][] = [
+      [name, name.value.trim().length > 0],
+      [from, /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(from.value.trim())],
+      [message, message.value.trim().length > 0],
+    ];
+    checks.forEach(([el, ok]) => setError(el, !ok));
+    const firstBad = checks.find(([, ok]) => !ok);
+    if (firstBad) { firstBad[0].focus(); return; }
+
+    const subject = `${topic.value}: message from ${name.value.trim()}`;
+    const body = `${message.value.trim()}\n\n${name.value.trim()}\n${from.value.trim()}`;
+    window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    if (result) result.textContent = `Your email app should now open with the message ready. If it did not, email ${email} directly.`;
+  });
+
+  document.getElementById('copy-email')?.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(email);
+      if (result) result.textContent = `Copied ${email} to your clipboard.`;
+    } catch {
+      if (result) result.textContent = `Copying is not available in this browser. The address is ${email}.`;
+    }
+  });
+</script>

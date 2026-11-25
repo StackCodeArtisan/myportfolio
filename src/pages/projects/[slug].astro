@@ -1,0 +1,108 @@
+---
+import Base from '../../layouts/Base.astro';
+import { ArrowLeft, ArrowUpRight, Lock } from '@lucide/astro';
+import { projects } from '../../data/projects.js';
+import { person } from '../../data/site.js';
+
+export function getStaticPaths() {
+  return projects.map((project, i) => ({
+    params: { slug: project.slug },
+    props: { project, next: projects[(i + 1) % projects.length] },
+  }));
+}
+
+const { project: p, next } = Astro.props;
+const state = p.status === 'Live' ? 'live' : p.status.startsWith('In') ? 'progress' : 'idle';
+const jsonLd = [{
+  '@context': 'https://schema.org',
+  '@type': p.slug === 'vendoracrm' || p.slug === 'tesselix-learn' ? 'SoftwareApplication' : 'CreativeWork',
+  name: p.name,
+  description: p.summary,
+  ...(p.slug === 'vendoracrm' || p.slug === 'tesselix-learn' ? { applicationCategory: 'BusinessApplication', operatingSystem: 'Web' } : {}),
+  ...(p.link ? { url: p.link.href } : {}),
+  creator: { '@type': 'Person', name: person.name },
+}];
+---
+<Base title={`${p.name} case study`} description={`${p.summary} ${p.status}.`} jsonLd={jsonLd}>
+  <article>
+    <header class="wrap case-head">
+      <a class="back" href="/#projects"><ArrowLeft size={16} aria-hidden="true" />All projects</a>
+      <p class="status" data-state={state}>{p.status}. {p.statusDetail}</p>
+      <h1>{p.name}</h1>
+      <p class="lede">{p.tagline}</p>
+      <dl class="meta">
+        <div><dt>Role</dt><dd>{p.role}</dd></div>
+        <div><dt>Stack</dt><dd>{p.stack.join(', ')}</dd></div>
+        {p.link && <div><dt>Live product</dt><dd><a class="text-link ext" href={p.link.href} target="_blank" rel="noopener">{p.link.label}<ArrowUpRight size={15} aria-hidden="true" /></a></dd></div>}
+      </dl>
+      {p.privateNote && <p class="private"><Lock size={15} aria-hidden="true" />{p.privateNote}</p>}
+    </header>
+
+    <div class="wrap case-body">
+      <section>
+        <h2>Overview</h2>
+        <p>{p.summary}</p>
+      </section>
+      <section>
+        <h2>The problem</h2>
+        <p>{p.problem}</p>
+      </section>
+      <section>
+        <h2>{p.capabilitiesTitle ?? 'What it does'}</h2>
+        <dl class="caps">{p.capabilities.map(([k, v]) => <div><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
+      </section>
+      <section>
+        <h2>What I did</h2>
+        <ul class="list">{p.responsibilities.map((r) => <li>{r}</li>)}</ul>
+      </section>
+      <section>
+        <h2>Engineering decisions</h2>
+        <dl class="caps">{p.decisions.map(([k, v]) => <div><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
+      </section>
+      {p.milestone && (
+        <section class="milestone">
+          <h2>{p.milestone.title}</h2>
+          <p>{p.milestone.body}</p>
+        </section>
+      )}
+    </div>
+
+    <nav class="wrap next" aria-label="Next project">
+      <a href={`/projects/${next.slug}`}>
+        <span class="muted">Next project</span>
+        <span class="next-name">{next.name}</span>
+      </a>
+    </nav>
+  </article>
+</Base>
+
+<style>
+  .case-head { padding-block: clamp(2.5rem, 6vw, 5rem) 3rem; border-bottom: 1px solid var(--line); }
+  .back { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--muted); text-decoration: none; font-size: var(--step--1); margin-bottom: 2.5rem; }
+  .back:hover { color: var(--text); }
+  h1 { font-size: var(--step-4); margin: 1rem 0 1rem; }
+  .meta { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 1.5rem 3rem; margin: 2.5rem 0 0; padding-top: 1.5rem; border-top: 1px solid var(--line); }
+  dt { color: var(--faint); font-size: var(--step--1); }
+  dd { margin: 0.2rem 0 0; }
+  .ext { display: inline-flex; gap: 0.3rem; align-items: center; }
+  .private { display: flex; align-items: center; gap: 0.5rem; color: var(--faint); font-size: var(--step--1); margin: 1.5rem 0 0; }
+  .case-body { display: grid; gap: 0; padding-block: 1rem 4rem; }
+  .case-body section { display: grid; grid-template-columns: 1fr 2.2fr; gap: 1rem 4rem; padding-block: 2.5rem; border-bottom: 1px solid var(--line); }
+  .case-body h2 { font-size: var(--step-2); }
+  .case-body p { color: var(--muted); max-width: 40em; margin: 0; }
+  .caps { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem 2.5rem; }
+  .caps dt { color: var(--text); font-weight: 600; font-size: 1rem; }
+  .caps dd { color: var(--muted); font-size: 0.95rem; }
+  .list { display: grid; gap: 0.8rem; color: var(--muted); }
+  .list li { padding-left: 1.25rem; position: relative; max-width: 40em; }
+  .list li::before { content: ''; position: absolute; left: 0; top: 0.7em; width: 0.45rem; height: 1px; background: var(--accent); }
+  .milestone { background: color-mix(in srgb, var(--accent) 6%, transparent); padding-inline: 1.5rem; border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line)); border-radius: 6px; margin-top: 2.5rem; }
+  .milestone p { color: var(--text) !important; }
+  .next { padding-bottom: 5rem; }
+  .next a { display: grid; gap: 0.3rem; padding: 2rem 0; border-top: 1px solid var(--line); text-decoration: none; }
+  .next-name { font-family: var(--serif); font-size: var(--step-3); }
+  .next a:hover .next-name { color: var(--accent-ink); }
+  @media (max-width: 800px) {
+    .meta, .case-body section, .caps { grid-template-columns: 1fr; }
+  }
+</style>

@@ -1,6 +1,31 @@
 {
+  "name": "joshua-idowu-portfolio",
+  "type": "module",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Portfolio of Joshua Olaoluwa Idowu, Full-Stack Software Engineer and Founder of Tesselix LTD.",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "test": "playwright test",
+    "verify": "npm run check && npm run build && npm run test"
+  },
   "dependencies": {
-    "aos": "^2.3.4",
-    "react-responsive-carousel": "^3.2.23"
+    "@astrojs/sitemap": "^3.7.6",
+    "@fontsource-variable/instrument-sans": "^5.3.0",
+    "@fontsource-variable/newsreader": "^5.3.0",
+    "@lucide/astro": "^1.80.0",
+    "astro": "^7.4.13"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@axe-core/playwright": "^4.14.1",
+    "@playwright/test": "^1.65.1",
+    "typescript": "5.9"
   }
 }

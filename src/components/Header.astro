@@ -1,0 +1,89 @@
+---
+import { Menu, X } from '@lucide/astro';
+import { nav } from '../data/site.js';
+---
+<header class="site-header">
+  <div class="wrap bar">
+    <a class="mark" href="/" aria-label="Joshua Idowu, home">
+      <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><rect x="1" y="1" width="30" height="30" rx="5" fill="none" stroke="currentColor" stroke-opacity=".35"/><path d="M12 9v10.5a3.5 3.5 0 0 1-6 2.4" fill="none" stroke="#5B8CFF" stroke-width="2.2" stroke-linecap="round"/><path d="M20 9v14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="26" cy="9" r="1.6" fill="#8B7CF6"/></svg>
+      <span>Joshua Idowu</span>
+    </a>
+    <nav class="primary" aria-label="Main">
+      <ul>
+        <li><a href="/">Home</a></li>
+        {nav.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
+      </ul>
+    </nav>
+    <a class="btn btn-primary cta" href="/#contact">Let’s work together</a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu">
+      <span class="visually-hidden">Open menu</span>
+      <Menu size={22} aria-hidden="true" />
+    </button>
+  </div>
+  <div class="mobile" id="mobile-menu" role="dialog" aria-modal="true" aria-label="Menu" hidden>
+    <div class="wrap mobile-inner">
+      <button class="menu-close" type="button"><span class="visually-hidden">Close menu</span><X size={24} aria-hidden="true" /></button>
+      <ul>
+        <li><a href="/">Home</a></li>
+        {nav.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
+      </ul>
+      <a class="btn btn-primary" href="/#contact">Let’s work together</a>
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header { position: sticky; top: 0; z-index: 50; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  .bar { display: flex; align-items: center; gap: 2rem; height: 4.25rem; }
+  .mark { display: flex; align-items: center; gap: 0.65rem; text-decoration: none; font-weight: 600; letter-spacing: -0.01em; }
+  .primary { margin-left: auto; }
+  .primary ul { display: flex; gap: 1.75rem; }
+  .primary a { text-decoration: none; color: var(--muted); font-size: var(--step--1); font-weight: 500; transition: color .2s; }
+  .primary a:hover { color: var(--text); }
+  .cta { padding: 0.65rem 1rem; }
+  .menu-toggle, .menu-close { display: none; background: none; border: 0; color: var(--text); padding: 0.5rem; cursor: pointer; }
+  .mobile { position: fixed; inset: 0; background: var(--bg); z-index: 60; }
+  .mobile-inner { display: flex; flex-direction: column; gap: 2rem; padding-top: 1rem; }
+  .menu-close { display: block; align-self: flex-end; }
+  .mobile ul { display: grid; gap: 0.25rem; }
+  .mobile ul a { display: block; font-family: var(--serif); font-size: 2.25rem; text-decoration: none; padding: 0.35rem 0; border-bottom: 1px solid var(--line); }
+  @media (max-width: 960px) {
+    .primary, .cta { display: none; }
+    .menu-toggle { display: block; margin-left: auto; }
+  }
+</style>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('.menu-toggle');
+  const menu = document.getElementById('mobile-menu');
+  const close = menu?.querySelector<HTMLButtonElement>('.menu-close');
+  const focusables = (): HTMLElement[] => (menu ? [...menu.querySelectorAll<HTMLElement>('a, button')] : []);
+
+  function open() {
+    if (!menu || !toggle) return;
+    menu.hidden = false;
+    toggle.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+    close?.focus();
+  }
+  function shut(returnFocus = true) {
+    if (!menu || !toggle) return;
+    menu.hidden = true;
+    toggle.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+    if (returnFocus) toggle.focus();
+  }
+  toggle?.addEventListener('click', open);
+  close?.addEventListener('click', () => shut());
+  menu?.querySelectorAll('ul a, .btn').forEach((a) => a.addEventListener('click', () => shut(false)));
+  menu?.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Escape') shut();
+    if (e.key === 'Tab') {
+      const f = focusables();
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
+  window.matchMedia('(min-width: 961px)').addEventListener('change', (e) => { if (e.matches && menu && !menu.hidden) shut(false); });
+</script>
