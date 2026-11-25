@@ -1,89 +1,127 @@
 ---
-import { Menu, X } from '@lucide/astro';
 import { nav } from '../data/site.js';
+const links = [{ label: 'Home', href: '/' }, ...nav];
 ---
-<header class="site-header">
+<header class="site-header" data-open="false">
   <div class="wrap bar">
     <a class="mark" href="/" aria-label="Joshua Idowu, home">
       <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><rect x="1" y="1" width="30" height="30" rx="5" fill="none" stroke="currentColor" stroke-opacity=".35"/><path d="M12 9v10.5a3.5 3.5 0 0 1-6 2.4" fill="none" stroke="#5B8CFF" stroke-width="2.2" stroke-linecap="round"/><path d="M20 9v14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="26" cy="9" r="1.6" fill="#8B7CF6"/></svg>
       <span>Joshua Idowu</span>
     </a>
-    <nav class="primary" aria-label="Main">
+
+    <!-- One navigation for every screen size: a row on desktop, a panel below the bar on mobile. -->
+    <nav class="site-nav" id="site-nav" aria-label="Main">
       <ul>
-        <li><a href="/">Home</a></li>
-        {nav.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
+        {links.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
       </ul>
+      <a class="btn btn-primary cta" href="/#contact">Let’s work together</a>
     </nav>
-    <a class="btn btn-primary cta" href="/#contact">Let’s work together</a>
-    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu">
-      <span class="visually-hidden">Open menu</span>
-      <Menu size={22} aria-hidden="true" />
+
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+      <span class="bars" aria-hidden="true"><span></span><span></span><span></span></span>
     </button>
-  </div>
-  <div class="mobile" id="mobile-menu" role="dialog" aria-modal="true" aria-label="Menu" hidden>
-    <div class="wrap mobile-inner">
-      <button class="menu-close" type="button"><span class="visually-hidden">Close menu</span><X size={24} aria-hidden="true" /></button>
-      <ul>
-        <li><a href="/">Home</a></li>
-        {nav.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
-      </ul>
-      <a class="btn btn-primary" href="/#contact">Let’s work together</a>
-    </div>
   </div>
 </header>
 
 <style>
-  .site-header { position: sticky; top: 0; z-index: 50; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  .site-header { position: sticky; top: 0; z-index: 50; border-bottom: 1px solid var(--line); }
+  /* The blur lives on a pseudo-element. A backdrop-filter on the header itself would make it the
+     containing block for the fixed mobile panel and trap the panel inside the 68px bar. */
+  .site-header::before {
+    content: ''; position: absolute; inset: 0; z-index: -1;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px);
+  }
   .bar { display: flex; align-items: center; gap: 2rem; height: 4.25rem; }
-  .mark { display: flex; align-items: center; gap: 0.65rem; text-decoration: none; font-weight: 600; letter-spacing: -0.01em; }
-  .primary { margin-left: auto; }
-  .primary ul { display: flex; gap: 1.75rem; }
-  .primary a { text-decoration: none; color: var(--muted); font-size: var(--step--1); font-weight: 500; transition: color .2s; }
-  .primary a:hover { color: var(--text); }
+  .mark { display: flex; align-items: center; gap: 0.65rem; text-decoration: none; font-weight: 600; letter-spacing: -0.01em; flex-shrink: 0; }
+
+  .site-nav { margin-left: auto; display: flex; align-items: center; gap: 2rem; }
+  .site-nav ul { display: flex; gap: 1.75rem; }
+  .site-nav ul a { text-decoration: none; color: var(--muted); font-size: var(--step--1); font-weight: 500; transition: color .2s; }
+  .site-nav ul a:hover { color: var(--text); }
   .cta { padding: 0.65rem 1rem; }
-  .menu-toggle, .menu-close { display: none; background: none; border: 0; color: var(--text); padding: 0.5rem; cursor: pointer; }
-  .mobile { position: fixed; inset: 0; background: var(--bg); z-index: 60; }
-  .mobile-inner { display: flex; flex-direction: column; gap: 2rem; padding-top: 1rem; }
-  .menu-close { display: block; align-self: flex-end; }
-  .mobile ul { display: grid; gap: 0.25rem; }
-  .mobile ul a { display: block; font-family: var(--serif); font-size: 2.25rem; text-decoration: none; padding: 0.35rem 0; border-bottom: 1px solid var(--line); }
+
+  .menu-toggle { display: none; }
+
   @media (max-width: 960px) {
-    .primary, .cta { display: none; }
-    .menu-toggle { display: block; margin-left: auto; }
+    .menu-toggle {
+      display: grid; place-items: center; flex-shrink: 0;
+      width: 2.75rem; height: 2.75rem; margin-left: auto; margin-right: -0.5rem;
+      background: none; border: 0; border-radius: 6px; color: var(--text); cursor: pointer;
+    }
+    .menu-toggle:hover { background: var(--panel); }
+    .bars { position: relative; width: 1.375rem; height: 0.875rem; }
+    .bars span {
+      position: absolute; left: 0; width: 100%; height: 2px; border-radius: 2px; background: currentColor;
+      transition: transform .25s ease, opacity .2s ease, top .25s ease;
+    }
+    .bars span:nth-child(1) { top: 0; }
+    .bars span:nth-child(2) { top: calc(50% - 1px); }
+    .bars span:nth-child(3) { top: calc(100% - 2px); }
+    [data-open='true'] .bars span:nth-child(1) { top: calc(50% - 1px); transform: rotate(45deg); }
+    [data-open='true'] .bars span:nth-child(2) { opacity: 0; }
+    [data-open='true'] .bars span:nth-child(3) { top: calc(50% - 1px); transform: rotate(-45deg); }
+
+    /* The panel sits below the bar and fills the rest of the screen. */
+    .site-nav {
+      position: fixed; left: 0; right: 0; top: 4.25rem; bottom: 0;
+      margin: 0; padding: 1.5rem var(--gutter) 2rem;
+      flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 2rem;
+      background: var(--bg); overflow-y: auto; overscroll-behavior: contain;
+      visibility: hidden; opacity: 0; transform: translateY(-0.5rem);
+      transition: opacity .2s ease, transform .2s ease, visibility 0s linear .2s;
+    }
+    [data-open='true'] .site-nav {
+      visibility: visible; opacity: 1; transform: none;
+      transition: opacity .2s ease, transform .2s ease, visibility 0s;
+    }
+    .site-nav ul { flex-direction: column; gap: 0; }
+    .site-nav ul a {
+      display: flex; align-items: center; min-height: 3.5rem;
+      font-family: var(--serif); font-size: 2rem; color: var(--text);
+      border-bottom: 1px solid var(--line);
+    }
+    .cta { justify-content: center; padding: 0.95rem 1.3rem; font-size: 1rem; }
+  }
+  @media (max-width: 960px) and (max-height: 560px) {
+    .site-nav ul a { font-size: 1.5rem; min-height: 2.9rem; }
   }
 </style>
 
 <script>
-  const toggle = document.querySelector<HTMLButtonElement>('.menu-toggle');
-  const menu = document.getElementById('mobile-menu');
-  const close = menu?.querySelector<HTMLButtonElement>('.menu-close');
-  const focusables = (): HTMLElement[] => (menu ? [...menu.querySelectorAll<HTMLElement>('a, button')] : []);
+  const header = document.querySelector<HTMLElement>('.site-header');
+  const toggle = header?.querySelector<HTMLButtonElement>('.menu-toggle');
+  const panel = document.getElementById('site-nav');
+  const mobile = window.matchMedia('(max-width: 960px)');
 
-  function open() {
-    if (!menu || !toggle) return;
-    menu.hidden = false;
-    toggle.setAttribute('aria-expanded', 'true');
-    document.body.style.overflow = 'hidden';
-    close?.focus();
+  const isOpen = () => header?.dataset.open === 'true';
+
+  function setOpen(open: boolean, { returnFocus = false } = {}) {
+    if (!header || !toggle) return;
+    header.dataset.open = String(open);
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    document.documentElement.style.overflow = open ? 'hidden' : '';
+    if (open) panel?.querySelector<HTMLElement>('a')?.focus();
+    else if (returnFocus) toggle.focus();
   }
-  function shut(returnFocus = true) {
-    if (!menu || !toggle) return;
-    menu.hidden = true;
-    toggle.setAttribute('aria-expanded', 'false');
-    document.body.style.overflow = '';
-    if (returnFocus) toggle.focus();
-  }
-  toggle?.addEventListener('click', open);
-  close?.addEventListener('click', () => shut());
-  menu?.querySelectorAll('ul a, .btn').forEach((a) => a.addEventListener('click', () => shut(false)));
-  menu?.addEventListener('keydown', (e: KeyboardEvent) => {
-    if (e.key === 'Escape') shut();
-    if (e.key === 'Tab') {
-      const f = focusables();
-      const first = f[0], last = f[f.length - 1];
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-    }
+
+  toggle?.addEventListener('click', () => setOpen(!isOpen()));
+
+  // Choosing a link closes the menu, including same-page section links.
+  panel?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => { if (isOpen()) setOpen(false); }));
+
+  document.addEventListener('keydown', (e) => {
+    if (!isOpen()) return;
+    if (e.key === 'Escape') { setOpen(false, { returnFocus: true }); return; }
+    if (e.key !== 'Tab' || !toggle || !panel) return;
+    // Keep keyboard focus within the open menu and the toggle, in page order (links first, toggle last).
+    const items = [...panel.querySelectorAll<HTMLElement>('a'), toggle];
+    const first = items[0], last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   });
-  window.matchMedia('(min-width: 961px)').addEventListener('change', (e) => { if (e.matches && menu && !menu.hidden) shut(false); });
+
+  window.addEventListener('hashchange', () => { if (isOpen()) setOpen(false); });
+  mobile.addEventListener('change', (e) => { if (!e.matches && isOpen()) setOpen(false); });
 </script>

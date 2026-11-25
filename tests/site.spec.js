@@ -87,27 +87,10 @@ test.describe('navigation', () => {
     test.skip(isMobile || info.project.name !== 'desktop', 'desktop only');
     await page.goto('/');
     for (const id of ['about', 'expertise', 'projects', 'experience', 'contact']) {
-      await page.locator(`nav.primary a[href="/#${id}"]`).click();
+      await page.locator(`#site-nav ul a[href="/#${id}"]`).click();
       await expect(page).toHaveURL(new RegExp(`#${id}$`));
       await expect(page.locator(`#${id}`)).toBeInViewport();
     }
-  });
-
-  test('mobile menu opens, traps Escape and returns focus', async ({ page }, info) => {
-    test.skip(info.project.name === 'desktop', 'mobile and tablet only');
-    await page.goto('/');
-    const toggle = page.locator('.menu-toggle');
-    await toggle.click();
-    const menu = page.locator('#mobile-menu');
-    await expect(menu).toBeVisible();
-    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-    await page.keyboard.press('Escape');
-    await expect(menu).toBeHidden();
-    await expect(toggle).toBeFocused();
-    await toggle.click();
-    await menu.getByRole('link', { name: 'Projects' }).click();
-    await expect(menu).toBeHidden();
-    await expect(page).toHaveURL(/#projects$/);
   });
 
   test('skip link moves focus to main content', async ({ page }, info) => {
@@ -152,3 +135,116 @@ test.describe('contact form', () => {
     void req;
   });
 });
+
+// The menu fix: run the header checks at every width the site must support.
+const widths = [320, 375, 430, 768, 1024, 1440];
+for (const width of widths) {
+  test.describe(`header at ${width}px`, () => {
+    test.use({ viewport: { width, height: width <= 430 ? 740 : 900 } });
+    const isMobileWidth = width <= 960;
+
+    test('shows the right navigation without overflow or overlap', async ({ page }, info) => {
+      test.skip(info.project.name !== 'desktop', 'viewport is set explicitly; run once');
+      await page.goto('/');
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      expect(overflow).toBeLessThanOrEqual(0);
+      // The frosted header must keep its blur (it lives on ::before so it cannot trap the mobile panel).
+      expect(await page.evaluate(() => getComputedStyle(document.querySelector('.site-header') ?? document.body, '::before').backdropFilter)).toBe('blur(10px)');
+      const toggle = page.locator('.menu-toggle');
+      const logo = page.locator('.mark');
+      if (isMobileWidth) {
+        await expect(toggle).toBeVisible();
+        await expect(page.locator('#site-nav')).toBeHidden();
+        const t = await toggle.boundingBox();
+        const l = await logo.boundingBox();
+        expect(t && l).toBeTruthy();
+        if (!t || !l) return;
+        expect(t.width).toBeGreaterThanOrEqual(44);
+        expect(t.height).toBeGreaterThanOrEqual(44);
+        expect(t.x + t.width).toBeLessThanOrEqual(width);       // inside the screen
+        expect(width - (t.x + t.width)).toBeGreaterThanOrEqual(8); // space from the edge
+        expect(t.x - (l.x + l.width)).toBeGreaterThanOrEqual(16); // no overlap with the logo
+      } else {
+        await expect(toggle).toBeHidden();
+        for (const label of ['Home', 'About', 'Expertise', 'Projects', 'Experience', 'Contact']) {
+          await expect(page.locator('#site-nav').getByRole('link', { name: label, exact: true })).toBeVisible();
+        }
+        await expect(page.locator('#site-nav .cta')).toBeVisible();
+      }
+    });
+
+    test('mobile menu covers the screen, works by touch and keyboard', async ({ page }, info) => {
+      test.skip(info.project.name !== 'desktop' || !isMobileWidth, 'mobile widths only; run once');
+      await page.goto('/');
+      await page.mouse.wheel(0, 1500);
+      const toggle = page.locator('.menu-toggle');
+      const panel = page.locator('#site-nav');
+      await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+      await expect(toggle).toHaveAttribute('aria-label', 'Open menu');
+
+      await toggle.click();
+      await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+      await expect(toggle).toHaveAttribute('aria-label', 'Close menu');
+      await expect(panel).toBeVisible();
+      // The original bug: the panel was trapped inside the 68px header.
+      const vh = page.viewportSize()?.height ?? 0;
+      // Measure after the 0.2s open transition has settled.
+      await expect.poll(async () => { const b = await panel.boundingBox(); return b ? Math.round(b.y + b.height) : 0; }).toBeGreaterThanOrEqual(vh - 1);
+      expect((await panel.boundingBox())?.width).toBe(width);
+      // Every link is visible, tappable and on top of the page.
+      for (const label of ['Home', 'About', 'Expertise', 'Projects', 'Experience', 'Contact']) {
+        const link = panel.getByRole('link', { name: label, exact: true });
+        await expect(link).toBeInViewport();
+        const lb = await link.boundingBox();
+        expect(lb && lb.height).toBeGreaterThanOrEqual(44);
+        const onTop = await link.evaluate((el) => {
+          const r = el.getBoundingClientRect();
+          return el.contains(document.elementFromPoint(r.left + 10, r.top + r.height / 2));
+        });
+        expect(onTop, label).toBe(true);
+      }
+      // Background does not scroll while open.
+      expect(await page.evaluate(() => getComputedStyle(document.documentElement).overflow)).toBe('hidden');
+      // Accessibility with the menu open.
+      const results = await new AxeBuilder({ page }).include('.site-header').analyze();
+      expect(results.violations.map((v) => v.id)).toEqual([]);
+
+      // Escape closes and returns focus.
+      await page.keyboard.press('Escape');
+      await expect(panel).toBeHidden();
+      await expect(toggle).toBeFocused();
+      expect(await page.evaluate(() => getComputedStyle(document.documentElement).overflow)).not.toBe('hidden');
+
+      // The close icon closes.
+      await toggle.click();
+      await expect(panel).toBeVisible();
+      await toggle.click();
+      await expect(panel).toBeHidden();
+
+      // Choosing a section closes the menu and scrolls there.
+      await toggle.click();
+      await panel.getByRole('link', { name: 'Experience', exact: true }).click();
+      await expect(panel).toBeHidden();
+      await expect(page).toHaveURL(/#experience$/);
+      await expect(page.locator('#experience')).toBeInViewport();
+      await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+
+      // Keyboard: Enter opens, focus stays inside the menu.
+      await toggle.focus();
+      await page.keyboard.press('Enter');
+      await expect(panel).toBeVisible();
+      for (let i = 0; i < 10; i++) await page.keyboard.press('Tab');
+      const inside = await page.evaluate(() => !!document.activeElement?.closest('.site-header'));
+      expect(inside).toBe(true);
+    });
+
+    test('menu closes when the screen widens to desktop', async ({ page }, info) => {
+      test.skip(info.project.name !== 'desktop' || width !== 768, 'once');
+      await page.goto('/');
+      await page.locator('.menu-toggle').click();
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await expect(page.locator('.site-header')).toHaveAttribute('data-open', 'false');
+      await expect(page.locator('#site-nav')).toBeVisible();
+    });
+  });
+}
